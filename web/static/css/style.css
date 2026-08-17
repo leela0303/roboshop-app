@@ -4,7 +4,7 @@
 
 body {
     background: linear-gradient(180deg, #0c1415, #16363e);
-    color: cyan;
+    color: orange;
     height: 1000px;
 }
 
@@ -13,12 +13,12 @@ h1 {
 }
 
 h1 a:link {
-    color: cyan;
+    color: orange;
     text-decoration: none;
 }
 
 h1 a:visited {
-    color: cyan;
+    color: orange;
     text-decoration: none;
 }
 
@@ -28,12 +28,12 @@ h3 {
 }
 
 h3 a:link {
-    color: cyan;
+    color: orange;
     text-decoration: none;
 }
 
 h3 a:visited {
-    color: cyan;
+    color: orange;
     text-decoration: none;
 }
 
@@ -52,12 +52,12 @@ ul.products {
 }
 
 a.product:visited {
-    color: cyan;
+    color: orange;
     text-decoration: none;
 }
 
 a.product:link {
-    color: cyan;
+    color: orange;
     text-decoration: none;
 }
 
@@ -114,7 +114,7 @@ a.product:hover {
 
 /* product details */
 .productimage {
-    border: 2px solid cyan;
+    border: 2px solid orange;
     padding: 5px;
     margin: 10px;
     width: 300px;
@@ -127,7 +127,7 @@ a.product:hover {
 }
 
 .productcart {
-    border: 1px solid cyan;
+    border: 1px solid orange;
     margin: 10px;
     padding: 5px;
     width: 300px;
@@ -146,7 +146,7 @@ a.product:hover {
 
 /* login register */
 table.credentials {
-    border: 2px solid cyan;
+    border: 2px solid orange;
     padding: 10px;
     margin: 10px;
 }
@@ -168,13 +168,13 @@ table.credentials {
 
 /* payment */
 a.cont:visited {
-    color: cyan;
+    color: orange;
     text-decoration: none;
     font-weight: bold;
 }
 
 a.cont:link {
-    color: cyan;
+    color: orange;
     text-decoration: none;
     font-weight: bold;
 }
