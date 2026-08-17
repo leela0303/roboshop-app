@@ -3,7 +3,7 @@
 #
 FROM php:8.1-apache
 
-RUN apt-get update && apt-get install -yqq unzip libzip-dev \
+RUN apt-get update && apt-get install -yqq unzip libzip-dev curl \
     && docker-php-ext-install pdo_mysql opcache zip
 
 # Enable AutoProfile for PHP which is currently opt-in beta
@@ -18,7 +18,7 @@ WORKDIR /var/www/html
 
 COPY html/ /var/www/html
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 RUN composer install
 
 # This is important. Symfony needs write permissions and we
