@@ -2,7 +2,7 @@
 # Default is docker/robotshop/image:latest
 image:
   repo: us-central1-docker.pkg.dev/balmy-outcome-501300-r3/roboshop-prod-images
-  version: latest
+  version: "21"
   pullPolicy: IfNotPresent
 
 # EUM configuration
