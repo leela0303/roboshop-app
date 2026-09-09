@@ -1,0 +1,4 @@
+image:
+  repo: us-central1-docker.pkg.dev/balmy-outcome-501300-r3/roboshop-prod-images
+  version: "<+pipeline.sequenceId>"
+  pullPolicy: IfNotPresent
