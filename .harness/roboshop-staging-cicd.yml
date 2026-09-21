@@ -1,0 +1,65 @@
+pipeline:
+  name: roboshop-staging-cicd
+  identifier: roboshopstagingcicd
+  projectIdentifier: roboshopstaging
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: githubconnector
+        repoName: roboshop-app
+        build: <+input>
+  stages:
+    - stage:
+        name: build-and-push
+        identifier: buildandpush
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: true
+          buildIntelligence:
+            enabled: true
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: roboshopgkeconnector
+              namespace: harness-delegate-ng
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: BuildAndPushGAR
+                  name: build-push-batch1
+                  identifier: build_push_batch1
+                  spec:
+                    connectorRef: gcpconnector
+                    host: us-central1-docker.pkg.dev
+                    projectID: balmy-outcome-501300-r3
+                    imageName: roboshop-staging-images/<+matrix.service>
+                    tags:
+                      - latest
+                      - <+pipeline.sequenceId>
+                    dockerfile: <+matrix.service>/Dockerfile
+                    context: <+matrix.service>
+                  strategy:
+                    matrix:
+                      service:
+                        - cart
+                        - catalogue
+                        - dispatch
+                        - mongo
+                        - mysql
+                        - payment
+                      maxConcurrency: 4
+              - step:
+                  type: BuildAndPushGAR
+                  name: build-push-batch2
+                  identifier: build_push_batch2
+                  spec:
+                    connectorRef: gcpconnector
