@@ -1,0 +1,140 @@
+pipeline:
+  name: roboshop-dev-cicd
+  identifier: roboshopdevcicd
+  projectIdentifier: roboshopdev
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: githubconnector
+        repoName: roboshop-app
+        build: <+input>
+  stages:
+    - stage:
+        name: build-and-push
+        identifier: buildandpush
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: true
+          buildIntelligence:
+            enabled: true
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: roboshopgkeconnector
+              namespace: harness-delegate-ng
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: BuildAndPushGAR
+                  name: build-push-batch1
+                  identifier: build_push_batch1
+                  spec:
+                    connectorRef: gcpconnector
+                    host: us-central1-docker.pkg.dev
+                    projectID: balmy-outcome-501300-r3
+                    imageName: roboshop-dev-images/<+matrix.service>
+                    tags:
+                      - latest
+                      - <+pipeline.sequenceId>
+                    dockerfile: <+matrix.service>/Dockerfile
+                    context: <+matrix.service>
+                  strategy:
+                    matrix:
+                      service:
+                        - cart
+                        - catalogue
+                        - dispatch
+                        - mongo
+                        - mysql
+                        - payment
+                      maxConcurrency: 4
+              - step:
+                  type: BuildAndPushGAR
+                  name: build-push-batch2
+                  identifier: build_push_batch2
+                  spec:
+                    connectorRef: gcpconnector
+                    host: us-central1-docker.pkg.dev
+                    projectID: balmy-outcome-501300-r3
+                    imageName: roboshop-dev-images/<+matrix.service>
+                    tags:
+                      - latest
+                      - <+pipeline.sequenceId>
+                    dockerfile: <+matrix.service>/Dockerfile
+                    context: <+matrix.service>
+                  strategy:
+                    matrix:
+                      service:
+                        - ratings
+                        - shipping
+                        - user
+                        - web
+                        - load-gen
+                        - fluentd
+                      maxConcurrency: 4
+              - step:
+                  type: Run
+                  name: vulnerability-scan
+                  identifier: vulnerability_scan
+                  spec:
+                    connectorRef: dockerhub
+                    image: aquasec/trivy:0.58.1
+                    shell: Sh
+                    envVariables:
+                      GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+                      GCP_KEY: <+secrets.getValue("gcp_sa_key")>
+                    command: |-
+                      echo "$GCP_KEY" > /tmp/gcp-key.json
+                      REG=us-central1-docker.pkg.dev/balmy-outcome-501300-r3/roboshop-dev-images
+                      for svc in cart catalogue dispatch mongo mysql payment ratings shipping user web load-gen fluentd; do
+                        echo "===== Scanning $svc ====="
+                        trivy image --severity HIGH,CRITICAL --no-progress --exit-code 0 $REG/$svc:latest || echo "scan failed for $svc"
+                      done
+    - stage:
+        name: deploy-roboshop
+        identifier: deployroboshop
+        description: ""
+        type: Deployment
+        spec:
+          deploymentType: Kubernetes
+          service:
+            serviceRef: roboshop
+          environment:
+            environmentRef: roboshopdev
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: roboshopdevgke
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+                    pruningEnabled: false
+            rollbackSteps:
+              - step:
+                  name: Rollback Rollout Deployment
+                  identifier: rollbackRolloutDeployment
+                  type: K8sRollingRollback
+                  timeout: 10m
+                  spec:
+                    pruningEnabled: false
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
